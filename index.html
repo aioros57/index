@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cartes cachées</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#f3efe6;--ink:#14213d;--tile:#2a1f5c;--tile2:#44358a;--tileink:#f6d365;--card:#fffaf0;--line:#d8cfba;--ok:#1f7a4d;--bad:#b3261e;--accent:#b07d00;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e0b24;--ink:#eee8d8;--tile:#2a1f5c;--tile2:#44358a;--card:#17133a;--line:#33295f;--ok:#5fd39a;--bad:#ff8a80;--accent:#f6d365;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e0b24;--ink:#eee8d8;--tile:#2a1f5c;--tile2:#44358a;--card:#17133a;--line:#33295f;--ok:#5fd39a;--bad:#ff8a80;--accent:#f6d365;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+main{max-width:940px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:clamp(1.8rem,5vw,2.6rem);font-weight:800;margin:0 0 4px;letter-spacing:-.02em}
+.sub{margin:0 0 14px;opacity:.8}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:16px}
+.chip{font:600 .9rem inherit;font-family:inherit;min-width:40px;padding:7px 10px;border-radius:8px;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.chip[aria-current="true"]{border-color:var(--accent);background:var(--tile);color:var(--tileink)}
+.chip.done{border-color:var(--ok)}
+.total{margin-left:auto;font-weight:600}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+@media(max-width:720px){.layout{grid-template-columns:1fr}}
+.board{position:relative;aspect-ratio:3/4;max-width:var(--bw,380px);width:100%;margin:0 auto;border-radius:12px;overflow:hidden;border:3px solid var(--ink);background:#000}
+.board img,.ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:radial-gradient(circle at 50% 35%,#6a4fd0,#2a1f5c 70%);color:#f6d365;font-weight:800;font-size:5rem;text-align:center}
+.ph small{font-size:.8rem;font-weight:400;opacity:.85;padding:0 14px;color:#fff}
+.grid{position:absolute;inset:0;display:grid}
+.cell{border:1px solid var(--bg);background:var(--tile);color:var(--tileink);font:800 clamp(1.4rem,6vw,2.2rem)/1 inherit;font-family:inherit;cursor:pointer;transition:opacity .5s,background .15s;padding:0;margin:0;border-radius:0}
+.cell:hover{background:var(--tile2)}
+.cell:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.cell.open{opacity:0;pointer-events:none}
+.board.won .cell{opacity:0;pointer-events:none}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.panel h2{font-size:1.05rem;margin:0 0 8px}
+#clues{list-style:none;margin:0 0 16px;padding:0;min-height:60px}
+#clues li{padding:8px 0;border-bottom:1px solid var(--line)}
+#clues b{display:inline-block;min-width:1.8em;color:var(--accent)}
+.row{display:flex;gap:8px}
+input,textarea,select{font:inherit;padding:10px 12px;border-radius:8px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.row input{flex:1;min-width:0}
+input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+button.go,button.sec{font:inherit;font-weight:600;padding:10px 16px;border-radius:8px;border:0;cursor:pointer;background:var(--ink);color:var(--bg)}
+button.sec{background:transparent;color:var(--ink);border:2px solid var(--line)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#msg{min-height:1.5em;margin:10px 0 0;font-weight:600}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.count{opacity:.75;font-size:.9rem;margin-bottom:8px}
+details{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+summary{cursor:pointer;font-weight:600}
+.f{display:grid;gap:10px;margin-top:12px}
+.f label{font-weight:600;font-size:.9rem;display:block;margin-bottom:4px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.note{font-size:.85rem;opacity:.75;margin:0}
+.size{display:flex;align-items:center;gap:12px;margin:-6px 0 16px}
+.size label{font-weight:600;white-space:nowrap}
+.size input{width:auto;flex:1;max-width:320px;padding:0;border:0;background:transparent;accent-color:var(--accent)}
+#sizev{min-width:3.5em;opacity:.75}
+@media(prefers-reduced-motion:reduce){.cell{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Cartes cachées</h1>
+<p class="sub">Choisis une carte, ouvre les cases pour lire les indices et devine quel personnage se cache derrière.</p>
+<div class="bar" id="bar"></div>
+<div class="size"><label for="size">Taille de la carte</label><input id="size" type="range" min="200" max="440" step="10" value="380"><span id="sizev">380 px</span></div>
+<div class="layout">
+  <div class="board" id="board"><div id="art"></div><div class="grid" id="grid"></div></div>
+  <div class="panel">
+    <h2 id="title">Indices</h2>
+    <div class="count" id="count"></div>
+    <ul id="clues"></ul>
+    <label for="guess" style="font-weight:600;display:block;margin-bottom:6px">Ta réponse</label>
+    <div class="row"><input id="guess" type="text" autocomplete="off" placeholder="Quelle carte est-ce ?"><button class="go" id="send">Valider</button></div>
+    <p id="msg" role="status" aria-live="polite"></p>
+    <div class="btns"><button class="sec" id="rand">Carte au hasard</button><button class="sec" id="again">Rejouer cette carte</button></div>
+  </div>
+</div>
+
+<details>
+  <summary>Gérer mes cartes (ajouter, modifier, mettre une image)</summary>
+  <div class="f">
+    <p class="note">Les images viennent de toi (capture d’écran, photo, dessin) : elles restent enregistrées dans ce navigateur uniquement.</p>
+    <div><label for="edsel">Carte à modifier</label><select id="edsel"></select></div>
+    <div><label for="edname">Nom de la carte</label><input id="edname" type="text"></div>
+    <div><label for="edalias">Autres réponses acceptées (séparées par des virgules)</label><input id="edalias" type="text" placeholder="ex. knight, chevalier du roi"></div>
+    <div><label for="edclues">Indices (un par ligne, entre 2 et 12, du plus vague au plus précis)</label><textarea id="edclues" rows="7"></textarea></div>
+    <div><label for="edimg">Image de la carte</label><input id="edimg" type="file" accept="image/*"></div>
+    <div class="btns"><button class="go" id="edsave">Enregistrer</button><button class="sec" id="eddel">Supprimer</button><button class="sec" id="edreset">Remettre les 10 cartes d’origine</button></div>
+    <p id="edmsg" class="note" role="status" aria-live="polite"></p>
+  </div>
+</details>
+</main>
+<script>
+var DEFAULTS=[
+{name:"Chevalier",alias:["knight"],clues:["Je suis une carte de mêlée.","Je coûte 3 d’élixir.","Je me débloque très tôt dans la partie.","Je porte une armure et une grosse moustache.","Je suis un défenseur solide et peu coûteux.","Mon nom compte 9 lettres et commence par C."]},
+{name:"Géant",alias:["giant"],clues:["Je coûte 5 d’élixir.","Je suis un gros tank lent.","Je ne cible que les bâtiments.","Mes alliés avancent derrière moi.","Je suis très grand, avec des poings énormes.","Mon nom compte 5 lettres et commence par G."]},
+{name:"Sorcier",alias:["wizard"],clues:["Je coûte 5 d’élixir.","Je suis fragile mais je frappe à distance.","J’inflige des dégâts de zone.","Je lance des projectiles enflammés.","Je porte un chapeau pointu.","Mon nom compte 7 lettres et commence par S."]},
+{name:"Mini P.E.K.K.A",alias:["mini pekka","minipekka"],clues:["Je coûte 4 d’élixir.","Je suis une carte de mêlée.","Je frappe lentement mais très fort.","J’ai une grande sœur beaucoup plus chère.","On dit que j’adore les crêpes.","Mon nom commence par Mini."]},
+{name:"Bébé dragon",alias:["bebe dragon","baby dragon"],clues:["Je coûte 4 d’élixir.","Je vole.","J’inflige des dégâts de zone.","Je suis vert.","Je suis une version miniature d’une créature qui crache du feu.","Mon nom a deux mots et commence par B."]},
+{name:"Valkyrie",alias:["valkyrie"],clues:["Je coûte 4 d’élixir.","Je suis une carte de mêlée.","Je frappe tout autour de moi.","J’ai les cheveux roux et une grande hache.","Je suis efficace contre les groupes de troupes terrestres.","Mon nom vient de la mythologie nordique."]},
+{name:"Ballon",alias:["ballon","balloon"],clues:["Je coûte 5 d’élixir.","Je vole.","Je ne cible que les bâtiments.","Je lâche des bombes sur les tours.","À ma mort, je laisse tomber une bombe.","Mon nom compte 6 lettres et commence par B."]},
+{name:"Mousquetaire",alias:["mousquetaire","musketeer"],clues:["Je coûte 4 d’élixir.","Je tire à distance.","Je peux viser les troupes terrestres comme aériennes.","Je porte un chapeau et un fusil.","On me joue souvent en défense contre les troupes volantes.","Mon nom compte 12 lettres et commence par M."]},
+{name:"Prince",alias:["prince"],clues:["Je coûte 5 d’élixir.","Je suis un cavalier.","Je monte un poney.","Je porte une lance.","Quand je charge, mon premier coup est dévastateur.","Mon nom compte 6 lettres et commence par P."]},
+{name:"Boule de feu",alias:["fireball"],clues:["Je coûte 4 d’élixir.","Je suis un sort, pas une troupe.","J’inflige des dégâts de zone.","Je repousse légèrement les troupes touchées.","On m’utilise pour éliminer les troupes fragiles groupées.","Mon nom contient le mot « feu »."]}
+];
+DEFAULTS.forEach(function(c){c.alias=c.alias||[];c.img=""});
+DEFAULTS[6].clues[3]="Je lâche des bombes sur les tours.";
+var KEY="cartes-cachees-v1",cards=[],cur=0,opened={},won=false,solved={},scores={};
+function load(){try{var s=localStorage.getItem(KEY);if(s){var a=JSON.parse(s);if(Array.isArray(a)&&a.length){cards=a;return}}}catch(e){}cards=JSON.parse(JSON.stringify(DEFAULTS))}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(cards));return true}catch(e){return false}}
+function $(id){return document.getElementById(id)}
+function norm(s){s=s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();return s.replace(/^(le|la|les|l|un|une) /,"")}
+function chips(){
+  var b=$("bar");b.innerHTML="";
+  cards.forEach(function(c,i){
+    var x=document.createElement("button");x.className="chip"+(solved[i]?" done":"");
+    x.textContent=solved[i]?(i+1)+" ✓":String(i+1);
+    x.setAttribute("aria-label","Carte "+(i+1)+(solved[i]?" trouvée":""));
+    if(i===cur)x.setAttribute("aria-current","true");
+    x.onclick=function(){pick(i)};b.appendChild(x);
+  });
+  var t=document.createElement("span");t.className="total";
+  var sum=0;Object.keys(scores).forEach(function(k){sum+=scores[k]});
+  t.textContent="Score : "+sum+" pts";b.appendChild(t);
+}
+function pick(i){
+  cur=i;opened={};won=false;$("msg").textContent="";$("guess").value="";
+  var c=cards[i],n=c.clues.length,cols=n<=6?2:3,rows=Math.ceil(n/cols);
+  var art=$("art");art.innerHTML="";
+  if(c.img){var im=document.createElement("img");im.alt="";im.src=c.img;art.appendChild(im)}
+  else{var p=document.createElement("div");p.className="ph";p.textContent="?";var s=document.createElement("small");s.textContent="Pas d’image : joue avec les indices, ou ajoute une image dans « Gérer mes cartes ».";p.appendChild(s);art.appendChild(p)}
+  var g=$("grid");g.innerHTML="";g.style.gridTemplateColumns="repeat("+cols+",1fr)";g.style.gridTemplateRows="repeat("+rows+",1fr)";
+  for(var k=0;k<n;k++){var b=document.createElement("button");b.className="cell";b.textContent=k+1;b.setAttribute("aria-label","Case "+(k+1));b.dataset.i=k;b.onclick=openCell;g.appendChild(b)}
+  $("board").classList.remove("won");
+  $("title").textContent="Indices · carte "+(i+1)+" sur "+cards.length;
+  $("clues").innerHTML='<li id="empty" style="opacity:.7">Choisis un numéro pour recevoir ton premier indice.</li>';
+  $("count").textContent="0 case ouverte sur "+n;
+  if(solved[i])reveal();
+  chips();
+}
+function openCell(e){
+  var i=+e.currentTarget.dataset.i;if(won||opened[i])return;
+  opened[i]=true;e.currentTarget.classList.add("open");
+  var e0=$("empty");if(e0)e0.remove();
+  var li=document.createElement("li"),b=document.createElement("b");b.textContent=i+1;li.appendChild(b);
+  li.appendChild(document.createTextNode(" "+cards[cur].clues[i]));$("clues").appendChild(li);
+  var n=Object.keys(opened).length;$("count").textContent=n+(n>1?" cases ouvertes":" case ouverte")+" sur "+cards[cur].clues.length;
+}
+function reveal(){won=true;$("board").classList.add("won")}
+function check(){
+  if(won)return;var g=norm($("guess").value);if(!g)return;
+  var c=cards[cur],names=[c.name].concat(c.alias||[]).map(norm);
+  if(names.indexOf(g)>-1){
+    var n=c.clues.length,o=Math.max(1,Object.keys(opened).length),sc=Math.min(100,Math.round(100*(n-o+1)/n));
+    solved[cur]=true;scores[cur]=sc;reveal();
+    $("msg").className="ok";$("msg").textContent="Bravo, c’est « "+c.name+" » ! +"+sc+" points.";chips();
+  }else{$("msg").className="bad";$("msg").textContent="Ce n’est pas ça. Ouvre une autre case pour un nouvel indice."}
+}
+$("send").onclick=check;$("guess").onkeydown=function(e){if(e.key==="Enter")check()};
+$("again").onclick=function(){delete solved[cur];delete scores[cur];pick(cur)};
+$("rand").onclick=function(){
+  var left=cards.map(function(_,i){return i}).filter(function(i){return !solved[i]&&i!==cur});
+  if(!left.length)left=cards.map(function(_,i){return i}).filter(function(i){return i!==cur});
+  if(left.length)pick(left[Math.floor(Math.random()*left.length)]);
+};
+/* ----- Éditeur ----- */
+var pendingImg=null;
+function edFill(){
+  var v=$("edsel").value;pendingImg=null;$("edimg").value="";
+  if(v==="new"){$("edname").value="";$("edalias").value="";$("edclues").value="";return}
+  var c=cards[+v];$("edname").value=c.name;$("edalias").value=(c.alias||[]).join(", ");$("edclues").value=c.clues.join("\n");
+}
+function edList(sel){
+  var s=$("edsel");s.innerHTML="";
+  cards.forEach(function(c,i){var o=document.createElement("option");o.value=i;o.textContent=(i+1)+". "+c.name;s.appendChild(o)});
+  var o=document.createElement("option");o.value="new";o.textContent="➕ Nouvelle carte";s.appendChild(o);
+  s.value=sel;edFill();
+}
+function resize(file){
+  return new Promise(function(res,rej){
+    var r=new FileReader();r.onerror=rej;
+    r.onload=function(){var im=new Image();im.onerror=rej;im.onload=function(){
+      var m=600,k=Math.min(1,m/Math.max(im.width,im.height)),cv=document.createElement("canvas");
+      cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);
+      cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);res(cv.toDataURL("image/jpeg",.82))};im.src=r.result};
+    r.readAsDataURL(file);
+  });
+}
+$("edsel").onchange=edFill;
+$("edimg").onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  resize(f).then(function(d){pendingImg=d;$("edmsg").textContent="Image prête : clique sur Enregistrer."}).catch(function(){$("edmsg").textContent="Impossible de lire cette image."});
+};
+$("edsave").onclick=function(){
+  var name=$("edname").value.trim(),cl=$("edclues").value.split("\n").map(function(s){return s.trim()}).filter(Boolean).slice(0,12);
+  if(!name){$("edmsg").textContent="Ajoute le nom de la carte.";return}
+  if(cl.length<2){$("edmsg").textContent="Ajoute au moins 2 indices (un par ligne).";return}
+  var al=$("edalias").value.split(",").map(function(s){return s.trim()}).filter(Boolean),v=$("edsel").value,idx;
+  if(v==="new"){cards.push({name:name,alias:al,clues:cl,img:pendingImg||""});idx=cards.length-1}
+  else{idx=+v;var c=cards[idx];c.name=name;c.alias=al;c.clues=cl;if(pendingImg)c.img=pendingImg}
+  var ok=save();edList(idx);pick(idx);
+  $("edmsg").textContent=ok?"Carte enregistrée.":"Carte ajoutée pour cette session, mais le navigateur n’a pas pu la mémoriser (image trop lourde ?).";
+};
+$("eddel").onclick=function(){
+  var v=$("edsel").value;if(v==="new"||cards.length<=1){$("edmsg").textContent="Rien à supprimer.";return}
+  cards.splice(+v,1);solved={};scores={};save();edList(0);pick(0);$("edmsg").textContent="Carte supprimée.";
+};
+$("edreset").onclick=function(){
+  cards=JSON.parse(JSON.stringify(DEFAULTS));solved={};scores={};save();edList(0);pick(0);$("edmsg").textContent="Les 10 cartes d’origine sont de retour.";
+};
+function setSize(v){$("board").style.setProperty("--bw",v+"px");$("sizev").textContent=v+" px";$("size").value=v}
+$("size").oninput=function(){setSize(this.value);try{localStorage.setItem(KEY+"-size",this.value)}catch(e){}};
+var sz=380;try{sz=+localStorage.getItem(KEY+"-size")||380}catch(e){}
+setSize(sz);
+load();edList(0);pick(0);
+</script>
+</body>
+</html>
